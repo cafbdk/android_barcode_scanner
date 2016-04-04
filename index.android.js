@@ -1,51 +1,98 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- */
+'use strict';
 
 import React, {
   AppRegistry,
   Component,
   StyleSheet,
   Text,
-  View
+  View,
+  ListView
 } from 'react-native';
 
-class cafbScanner extends Component {
-  render() {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.welcome}>
-          Welcome to React Native!
-        </Text>
-        <Text style={styles.instructions}>
-          To get started, edit index.android.js
-        </Text>
-        <Text style={styles.instructions}>
-          Shake or press menu button for dev menu
-        </Text>
-      </View>
-    );
-  }
-}
+import BarcodeScanner from 'react-native-barcodescanner';
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F5FCFF',
+var api = require('./components/api.js');
+
+
+var cafbScanner = React.createClass({
+    getInitialState: function() {
+        return{
+            barcode: '',
+            type: '',
+            torchMode: 'on',
+            cameraType: 'back',
+        }
+        console.log('state loaded');
+    },
+
+    barcodeReceived(e) {
+      var code = e.data;
+      console.log('Barcode: ' + e.data);
+      console.log('Barcode Length: '+ e.data.length);
+      console.log('Type: ' + e.type);
+
+      this.setState({
+        'barcode': e.data,
+        'type': e.type,
+      });
+
+      this.getUPC(code);
   },
-  welcome: {
-    fontSize: 20,
-    textAlign: 'center',
-    margin: 10,
+
+    getUPC: function(code){
+        var URL = 'https://cafbsite.herokuapp.com/api/auth/upc=' + code + '/?format=json';
+        api(URL).then(
+            (response) => {
+                console.log(response);
+                console.log(URL);
+            });
+
+    },
+
+    render() {
+      return (
+        <BarcodeScanner
+          onBarCodeRead={this.barcodeReceived}
+          style={{ flex: 1 }}
+          torchMode={this.state.torchMode}
+          cameraType={this.state.cameraType}
+        />
+      );
   },
-  instructions: {
-    textAlign: 'center',
-    color: '#333333',
-    marginBottom: 5,
-  },
+
+});
+
+
+var styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: '#FF6600',
+    },
+    webview_header: {
+        paddingLeft: 10,
+        backgroundColor: '#FF6600',
+        flex: 1,
+        justifyContent: 'space-between',
+        flexDirection: 'row'
+    },
+    header_item: {
+        paddingLeft: 10,
+        paddingRight: 10,
+        justifyContent: 'center'
+    },
+    webview_body: {
+        flex: 9
+    },
+    button: {
+        textAlign: 'center',
+        color: '#FFF',
+    },
+    page_title: {
+        color: '#FFF'
+    },
+    spinner: {
+        alignItems: 'flex-end'
+    }
 });
 
 AppRegistry.registerComponent('cafbScanner', () => cafbScanner);
